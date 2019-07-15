@@ -1,86 +1,61 @@
 var express = require("express");
-var db = require('./db');
+var da = require('./da');
 var bodyParser = require('body-parser')
 var validate = require('./validate.js');
+var Display = require('./handlepromise');
+
 var app = express();
-let resp = {};
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.post("/post",  function(request, response) {
-  
- 
+
+app.post("/post", async (request, response) => {
+
+  try{
   let verify = validate(request.body);
-if(verify.error === null){ // return true | error
-  let saved = db.savePost(request.body);
-        saved.then(function(results){
-          response.send(results)
-        }).catch(function(err){
-                                  console.log("1 Promise rejection error: "+err);
-      
-                                });
-    }else{
-      resp.status = 200;
-      resp.message = verify.error.details[0].message;
-      resp.payload = [];
-      response.send(resp);
-    }     
- });
-
- app.delete("/post/delete", function(request, response) {
-     
-  let deleteComment = db.DeletePost(request.body);
-  
-  deleteComment.then(function(results){
-    response.send("Deleted Successfully")
-    console.log('2 '+results)}).catch(function(err){
-                            console.log("Promise rejection error: "+err);
-
-                          });     
+  if (verify.error === null) { // return true | error
+    let saved = await da.savePost(request.body);
+    console.log("Message");
+    Display.display(saved, response);
+  } else {
+   // HandlePromiseAndDisplay.displayresponse(200, verify.error.details[0].message, [], response)
+  }
+}catch(err){
+  console.log(err.message);
+}
 });
 
-app.get("/post/singlePost", function(request, response) {
-     
-  let singlePost =  db.getSinglePost(request.body);
- 
-  singlePost.then(function(results){
-    resp.status = 200;
-    resp.message = "Success";
-    resp.payload = results;
-    response.send(resp);
-   
-    console.log('3 '+results)}).catch(function(err){
-                            console.log("Promise rejection error: "+err);
 
-                          });     
-});
-app.get("/post/allPosts", function(request, response) {
-     
-  let AllPost = db.getAllPost();
- 
-  AllPost.then(function(results){
-    resp.status = 200;
-    resp.message = "Success";
-    resp.payload = results;
-    response.send(resp);
-    console.log('4 '+results)}).catch(function(err){
-                            console.log("Promise rejection error: "+err);
+app.delete("/post/delete",async (request, response) => {
 
-                          });     
+  console.log(request.body);
+  let deleteComment = await da.DeletePost(request.body);
+
+  Display.display(deleteComment, response);
+
 });
 
-app.put("/post/updatePost", function(request, response) {
-     
-  let updatePost =  db.UpdatePost(request.body);
- 
-  updatePost.then(function(results){
-    response.send("Update Successfully");
-    console.log('5 '+results)}).catch(function(err){
-                            console.log("Promise rejection error: "+err);
+app.get("/post/singlePost",async (request, response) => {
 
-                          });     
+  let singlePost = await da.getSinglePost(request.body);
+  Display.display(singlePost, response);
 });
-app.use(function(req, res, next){
+
+app.get("/post/allPosts",async (request, response) => {
+
+  let allPost = await da.getAllPost();
+  Display.display(allPost, response);
+});
+
+app.put("/post/updatePost",async (request, response) => {
+
+  let updatePost = await da.UpdatePost(request.body);
+  Display.display(updatePost, response);
+});
+
+app.use((req, res, next) => {
   res.status(404);
   res.send("Page Not Found");
 });
-  app.listen(8080, () => console.log(`Example app listening on port!`))
+
+
+app.listen(8080, () => console.log(`Example app listening on port!`))
