@@ -1,3 +1,4 @@
+//db page 
 const connection = require('./config');
 
 class db {
