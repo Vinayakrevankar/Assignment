@@ -1,12 +1,20 @@
-var express = require("express");
-var da = require('./da');
-var bodyParser = require('body-parser')
-var validate = require('./validate.js');
-var Display = require('./handlepromise');
+let express = require("express");
+let da = require('./da');
 
-var app = express();
+let bodyParser = require('body-parser')
+let validate = require('./validate.js');
+let Display = require('./display');
+const fileUpload = require('express-fileupload');
+let app = express();
+app.use(fileUpload());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+let options = {
+   host : "localhost",
+   port : "8080"
+}
+
 
 app.post("/post", async (request, response) => {
 
@@ -14,7 +22,7 @@ app.post("/post", async (request, response) => {
   let verify = validate(request.body);
   if (verify.error === null) { // return true | error
     let saved = await da.savePost(request.body);
-    console.log("Message");
+    console.log(saved);
     Display.display(saved, response);
   } else {
    // HandlePromiseAndDisplay.displayresponse(200, verify.error.details[0].message, [], response)
@@ -34,9 +42,10 @@ app.delete("/post/delete",async (request, response) => {
 
 });
 
-app.get("/post/singlePost",async (request, response) => {
+app.get("/post/singlePost/:id",async (request, response) => {
 
-  let singlePost = await da.getSinglePost(request.body);
+ console.log(request.params.id);
+  let singlePost = await da.getSinglePost(request.params.id);
   Display.display(singlePost, response);
 });
 
@@ -48,14 +57,38 @@ app.get("/post/allPosts",async (request, response) => {
 
 app.put("/post/updatePost",async (request, response) => {
 
-  let updatePost = await da.UpdatePost(request.body);
+  let updatePost = await da.updatePost(request.body);
   Display.display(updatePost, response);
 });
 
-app.use((req, res, next) => {
-  res.status(404);
-  res.send("Page Not Found");
+app.post('/upload',(req, res)=> {
+  if (Object.keys(req.files).length == 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  let file = req.files.File;
+  let path = `./files/${file.name}`;
+  file.filepath= `/files/${file.name}`;
+  file.id=  req.body.id;
+  console.log(file);
+ 
+  file.mv(path, async (err) => {
+    if (err)
+      return res.status(500).send(err);
+      let uploadFile = await da.uploadFile(file);
+      Display.display(uploadFile, res);
+  });
 });
 
 
-app.listen(8080, () => console.log(`Example app listening on port!`))
+app.get('/getupload', async(req, res) => {
+ 
+      let getUploadFiles = await da.getUploadFiles();
+      Display.display(getUploadFiles, res);
+});
+
+// app.get('*', function(req, res){
+//   res.send('Sorry, this is an invalid URL.');
+// });
+
+app.listen(options.port, () => console.log(`Example app listening on port!`))

@@ -4,9 +4,9 @@ class da {
   static savePost = (res) =>{
 
     let { postId, name, email, body } = res;
-    return  new Promise(function (resolve, reject) {
+    return  new Promise( (resolve, reject)=> {
       connection.query(`INSERT INTO posts.comments (postId, name,email,body) VALUES ('${postId}','${name}','${email}','${body}');`,
-        function (err, rows) {
+         (err, rows) =>{
           if (rows === undefined) {
             console.log(err.message);
             reject(err);
@@ -20,10 +20,10 @@ class da {
 
   static DeletePost =  (res) => {
     let { postId } = res;
-    return new Promise(function (resolve, reject) {
+    return new Promise( (resolve, reject)=> {
 
       connection.query(`DELETE FROM comments WHERE postId='${postId}';`,
-        function (err, rows) {
+         (err, rows) =>{
           if (err) 
             reject(err);
           else
@@ -34,17 +34,30 @@ class da {
   }
 
   static getSinglePost =   (res) => {
-    let { postId } = res;
-    return new Promise(function (resolve, reject) {
 
-      connection.query(`SELECT * FROM comments WHERE postId='${postId}';`,
-        function (err, rows) {
-          if (err) {
-            console.log(err.message);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
+    return new Promise( (resolve, reject) =>{
+
+      // let query = `SELECT *
+      // FROM comments
+      // INNER JOIN uploads
+      // ON comments.postId = uploads.postId WHERE comments.postId='${res}'`;
+      // //connection.query(`SELECT * FROM comments WHERE postId='${res}';`,
+
+        connection.query(`SELECT * FROM comments WHERE postId='${res}'`,
+         (err, rows)=> {
+            connection.query(`SELECT * FROM uploads WHERE postId='${res}'`,
+                 (err, rows1)=> {
+                  if (err) {
+                    console.log(err.message);
+                    reject(err);
+                  } else {
+                    rows[0].file_url = rows1;
+                    console.log(JSON.stringify(rows));
+                    resolve(rows);
+                  }
+                });
+           
+          
         });
 
     });
@@ -52,10 +65,10 @@ class da {
 
   static getAllPost =   () => {
 
-    return new Promise(function (resolve, reject) {
+    return new Promise( (resolve, reject)=> {
 
       connection.query(`SELECT * FROM comments`,
-        function (err, rows) {
+         (err, rows) =>{
           if (err) {
             console.log(err.message);
             reject(err);
@@ -67,12 +80,45 @@ class da {
     });
   }
 
-  static UpdatePost =   (res) => {
+  static updatePost =   (res) => {
     let { postId, id, name, email, body } = res;
-    return new Promise(function (resolve, reject) {
+    return new Promise( (resolve, reject)=> {
 
       connection.query(`Update comments set postId='${postId}',name='${name}',email='${email}',body='${body}' where id='${id}'`,
-        function (err, rows) {
+         (err, rows)=> {
+          if (err) {
+            console.log(err.message);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+
+    });
+
+  }
+  static uploadFile =   (res) => {
+    let {id,filepath} = res;
+    return new Promise( (resolve, reject)=> {
+
+      connection.query(`INSERT INTO uploads (postId, file_url) VALUES ('${id}','${filepath}');`,
+         (err, rows) => {
+          if (err) {
+            console.log(err.message);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+
+    });
+
+  }
+  static getUploadFiles =   () => {
+    return new Promise( (resolve, reject) =>{
+
+      connection.query(`select * from uploads`,
+         (err, rows) => {
           if (err) {
             console.log(err.message);
             reject(err);

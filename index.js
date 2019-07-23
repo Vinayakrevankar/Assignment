@@ -23,7 +23,7 @@ http.createServer((req, res)=> {
 
 
 getCustomer = () =>{
-  return new Promise(function(resolve, reject){
+  return new Promise((resolve, reject)=>{
     con.query("SELECT * from users", 
         function(err, rows){                                                
             if(rows === undefined){
@@ -37,9 +37,9 @@ getCustomer = () =>{
 
 
 
-saveCustomer = function(...data){
+saveCustomer = (...data)=>{
     let email = data[2].trim();
-  return new Promise(function(resolve, reject){
+  return new Promise((resolve, reject)=>{
     con.query('SELECT Email FROM USERS WHERE Email = ?',email, 
 
         function(err, rows){                                           
@@ -52,7 +52,7 @@ saveCustomer = function(...data){
                 reject(new Error("user Already Exists"));;
               }else{
                 con.query(`INSERT INTO users (sno, Name, Mobile, Email, Password) VALUES (NULL,'${data[0]}', '${data[1]}','${data[2]}','${data[3]}');`, 
-                function(err, rows){                                                
+                (err, rows)=>{                                                
                     if(rows === undefined){
                         reject(new Error("Error rows is undefined"));
                     }else{
@@ -71,10 +71,10 @@ saveCustomer = function(...data){
 };
 
 
-deleteCustomer = function(sno){
-  return new Promise(function(resolve, reject){
+deleteCustomer = (sno)=>{
+  return new Promise((resolve, reject)=>{
     con.query(`Delete from users where sno='${sno}'`, 
-        function(err, rows){                                                
+        (err, rows)=>{                                                
             if(rows === undefined){
                 reject(new Error("Error rows is undefined"));
             }else{
